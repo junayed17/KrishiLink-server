@@ -6,7 +6,7 @@ require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASS}@cluster0.vdcsgkx.mongodb.net/?appName=Cluster0`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -84,13 +84,23 @@ app.get("/myPosts", async (req, res) => {
 
 
 
+// details of a post api 
+app.get("/postDetails/:id", async (req, res) => {
+  const id= req.params.id;
+  const query = {
+    _id:new ObjectId(id),
+  };
+
+  console.log(id);
+
+  const result = await collection.findOne(query);
+  res.send(result);
+});
 
 
 
 
-    app.get("/", (req, res) => {
-      res.send("hey i am trying to connect database");
-    });
+
 
     app.listen(port, () => {
       console.log(`Server listening on port ${port}`);
