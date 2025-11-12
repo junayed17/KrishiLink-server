@@ -26,6 +26,19 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
 
+// database connection 
+const database=client.db("KrisiLink");
+const collection=database.collection("allPosts");
+
+
+
+
+
+
+
+
+
+
     app.get("/", (req, res) => {
       res.send("hey i am trying to connect database");
     });
