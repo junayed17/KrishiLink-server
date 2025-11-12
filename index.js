@@ -33,6 +33,55 @@ const collection=database.collection("allPosts");
 
 
 
+// api for post add 
+
+app.post("/addPost",async(req,res)=>{
+  const data=req.body;
+  const result=await collection.insertOne(data)
+  res.send(result)
+})
+
+
+
+// api for all data 
+app.get("/allPosts",async(req,res)=>{
+  const result = await collection.find().toArray();
+  res.send(result)
+})
+
+
+// api for latest Post 
+
+app.get("/latestPosts", async (req, res) => {
+  const result = await collection.find().limit(3).toArray();
+  res.send(result);
+});
+
+
+
+// api for all the post 
+
+app.get("/allPosts", async (req, res) => {
+  const result = await collection.find().toArray();
+  res.send(result);
+});
+
+
+
+
+// api to get my post only
+app.get("/myPosts", async (req, res) => {
+ const email= req.query.email
+ const query = {
+   "owner.ownerEmail": email,
+ };
+
+ console.log(email);
+ 
+  const result = await collection.find(query).toArray();
+  res.send(result);
+});
+
 
 
 
