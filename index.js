@@ -84,6 +84,11 @@ app.get("/myPosts", async (req, res) => {
 
 
 
+
+
+
+
+
 // details of a post api 
 app.get("/postDetails/:id", async (req, res) => {
   const id= req.params.id;
@@ -98,6 +103,16 @@ app.get("/postDetails/:id", async (req, res) => {
 });
 
 
+
+// delete my post api
+app.delete("/myPost/:id",async(req,res)=>{
+  const id=req.params.id;
+  const query={
+    _id:new ObjectId(id)
+  }
+const result=await collection.deleteOne(query)
+  res.send(result)
+})
 
 
 
