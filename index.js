@@ -90,7 +90,23 @@ async function run() {
 
     // get my interests Posts 
 
+    app.get("/myInterestedPosts/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
 
+        const query = {
+          interests: {
+            $elemMatch: { email: email },
+          },
+        };
+
+        const result = await collection.find(query).toArray();
+        res.send(result);
+      } catch (err) {
+        console.log(err);
+        res.status(500).send("Server Error");
+      }
+    });
 
 
 
