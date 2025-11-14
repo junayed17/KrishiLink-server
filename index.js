@@ -26,61 +26,69 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
 
-// database connection 
-const database=client.db("KrisiLink");
-const collection=database.collection("allPosts");
+    // database connection
+    const database = client.db("KrisiLink");
+    const collection = database.collection("allPosts");
+
+    // api for post add
+
+    app.post("/addPost", async (req, res) => {
+      const data = req.body;
+      const result = await collection.insertOne(data);
+      res.send(result);
+    });
+
+    // api for all data
+    app.get("/allPosts", async (req, res) => {
+      const result = await collection.find().toArray();
+      res.send(result);
+    });
+
+    // api for latest Post
+
+    app.get("/latestPosts", async (req, res) => {
+      const result = await collection.find().limit(6).toArray();
+      res.send(result);
+    });
+
+    // api for all the post
+
+    app.get("/allPosts", async (req, res) => {
+      const result = await collection.find().toArray();
+      res.send(result);
+    });
+
+    // api to get my post only
+    app.get("/myPosts", async (req, res) => {
+      const email = req.query.email;
+      const query = {
+        "owner.ownerEmail": email,
+      };
+
+      const result = await collection.find(query).toArray();
+      res.send(result);
+    });
+
+    // details of a post api
+    app.get("/postDetails/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id),
+      };
+
+      console.log(id);
+
+      const result = await collection.findOne(query);
+      res.send(result);
+    });
 
 
 
 
-// api for post add 
-
-app.post("/addPost",async(req,res)=>{
-  const data=req.body;
-  const result=await collection.insertOne(data)
-  res.send(result)
-})
 
 
 
-// api for all data 
-app.get("/allPosts",async(req,res)=>{
-  const result = await collection.find().toArray();
-  res.send(result)
-})
-
-
-// api for latest Post 
-
-app.get("/latestPosts", async (req, res) => {
-  const result = await collection.find().limit(3).toArray();
-  res.send(result);
-});
-
-
-
-// api for all the post 
-
-app.get("/allPosts", async (req, res) => {
-  const result = await collection.find().toArray();
-  res.send(result);
-});
-
-
-
-
-// api to get my post only
-app.get("/myPosts", async (req, res) => {
- const email= req.query.email
- const query = {
-   "owner.ownerEmail": email,
- };
-
- console.log(email);
- 
-  const result = await collection.find(query).toArray();
-  res.send(result);
-});
+    // get my interests Posts 
 
 
 
@@ -89,33 +97,59 @@ app.get("/myPosts", async (req, res) => {
 
 
 
-// details of a post api 
-app.get("/postDetails/:id", async (req, res) => {
-  const id= req.params.id;
-  const query = {
-    _id:new ObjectId(id),
-  };
+    // delete my post api
+    app.delete("/myPost/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id),
+      };
+      const result = await collection.deleteOne(query);
+      res.send(result);
+    });
 
-  console.log(id);
-
-  const result = await collection.findOne(query);
-  res.send(result);
-});
-
+    // order api
 
 
-// delete my post api
-app.delete("/myPost/:id",async(req,res)=>{
-  const id=req.params.id;
-  const query={
-    _id:new ObjectId(id)
+app.patch("/post/:id", async (req, res) => {
+  try {
+    const postId = req.params.id;
+
+    const updatedData = req.body;
+
+    updatedData._id = new ObjectId();
+
+    const result = await collection.updateOne(
+      { _id: new ObjectId(postId) },
+      {
+        $push: {
+          interests: updatedData,
+        },
+      }
+    );
+
+    res.send(result);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Server Error");
   }
-const result=await collection.deleteOne(query)
-  res.send(result)
-})
+});
 
 
+    // update my post api
 
+    app.patch("/myPost/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatededData = req.body;
+      const updatedDoc = {
+        $set: updatededData,
+      };
+      const query = {
+        _id: new ObjectId(id),
+      };
+
+      const result = await collection.updateOne(query, updatedDoc);
+      res.send(result);
+    });
 
     app.listen(port, () => {
       console.log(`Server listening on port ${port}`);
