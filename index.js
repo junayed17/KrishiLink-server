@@ -82,13 +82,7 @@ async function run() {
       res.send(result);
     });
 
-
-
-
-
-
-
-    // get my interests Posts 
+    // get my interests Posts
 
     app.get("/myInterestedPosts/:email", async (req, res) => {
       try {
@@ -108,11 +102,6 @@ async function run() {
       }
     });
 
-
-
-
-
-
     // delete my post api
     app.delete("/myPost/:id", async (req, res) => {
       const id = req.params.id;
@@ -125,31 +114,29 @@ async function run() {
 
     // order api
 
+    app.patch("/post/:id", async (req, res) => {
+      try {
+        const postId = req.params.id;
 
-app.patch("/post/:id", async (req, res) => {
-  try {
-    const postId = req.params.id;
+        const updatedData = req.body;
 
-    const updatedData = req.body;
+        updatedData._id = new ObjectId();
 
-    updatedData._id = new ObjectId();
+        const result = await collection.updateOne(
+          { _id: new ObjectId(postId) },
+          {
+            $push: {
+              interests: updatedData,
+            },
+          }
+        );
 
-    const result = await collection.updateOne(
-      { _id: new ObjectId(postId) },
-      {
-        $push: {
-          interests: updatedData,
-        },
+        res.send(result);
+      } catch (err) {
+        console.log(err);
+        res.status(500).send("Server Error");
       }
-    );
-
-    res.send(result);
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("Server Error");
-  }
-});
-
+    });
 
     // update my post api
 
@@ -166,6 +153,33 @@ app.patch("/post/:id", async (req, res) => {
       const result = await collection.updateOne(query, updatedDoc);
       res.send(result);
     });
+
+    // update status  of my post interests of others api
+app.patch("/interestStatus/:postId/:interestId", async (req, res) => {
+  const { postId, interestId } = req.params;
+  const { status } = req.body;
+
+  try {
+    const result = await collection.updateOne(
+      {
+        _id: new ObjectId(postId),
+        "interests._id": new ObjectId(interestId),
+      },
+      {
+        $set: { "interests.$.status": status },
+      }
+    );
+
+    res.send(result);
+  } catch (err) {
+    res.status(500).send({ error: err.message });
+  }
+});
+
+
+
+
+
 
     app.listen(port, () => {
       console.log(`Server listening on port ${port}`);
