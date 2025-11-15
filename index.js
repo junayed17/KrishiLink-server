@@ -47,7 +47,11 @@ async function run() {
     // api for latest Post
 
     app.get("/latestPosts", async (req, res) => {
-      const result = await collection.find().limit(6).toArray();
+      const result = await collection
+        .find({})
+        .sort({ _id: -1 })
+        .limit(6)
+        .toArray();
       res.send(result);
     });
 
