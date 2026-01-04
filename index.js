@@ -29,6 +29,7 @@ async function run() {
     // database connection
     const database = client.db("KrisiLink");
     const collection = database.collection("allPosts");
+    const usersCollection = database.collection("usersCollection");
 
     // api for post add
 
@@ -40,7 +41,30 @@ async function run() {
 
     // api for all data
     app.get("/allPosts", async (req, res) => {
-      const result = await collection.find().toArray();
+      const { catagory, sort, limit, pageIndex } = req.query;
+      const searchItem = {
+        
+      };
+      if (catagory) {
+        searchItem.type=catagory
+      }
+      const sortt = {};
+      if (sort) {
+        sortt.pricePerUnit = sort;
+      }
+      let limititem=0;
+      if (limit) {
+        limititem = Number(limit);
+      }
+      let skip=0;
+      if (pageIndex) {
+        skip = Number(pageIndex) * limititem;
+      }
+      
+
+      
+      
+      const result = await collection.find(searchItem).sort(sortt).skip(skip).limit(limititem).toArray();
       res.send(result);
     });
 
@@ -54,6 +78,81 @@ async function run() {
         .toArray();
       res.send(result);
     });
+
+
+
+
+
+
+
+
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+
+      // 1. Prothome check koro ei email-er user age theke database-e ache kina
+      const query = { email: user.email };
+      const existingUser = await usersCollection.findOne(query);
+
+      if (existingUser) {
+        // 2. Jodi age thekei thake, tobe r add korbe na
+        return res.send({ message: "User already exists", insertedId: null });
+      }
+
+      // 3. Jodi user notun hoy, tobei insert korbe
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+
+    // finding overview api 
+   app.get("/site-stats", async (req, res) => {
+     try {
+       // 1. Total Posts count
+       const totalPosts = await collection.countDocuments();
+
+       // 2. Total Sellers (Using Aggregation for API Version 1 compatibility)
+       const sellerStats = await collection
+         .aggregate([
+           {
+             $group: {
+               _id: "$owner.ownerEmail", // Protita unique email ke group korbe
+             },
+           },
+           {
+             $count: "totalSellers", // Group hoye jaoa email gulo ke count korbe
+           },
+         ])
+         .toArray();
+
+       const totalSellers =
+         sellerStats.length > 0 ? sellerStats[0].totalSellers : 0;
+
+       // 3. Stock Out Posts count (quantity "0" hole)
+       const totalusers= await usersCollection.countDocuments();
+
+       res.send({
+         totalPosts,
+         totalSellers,
+         totalusers,
+       });
+     } catch (error) {
+       console.error("Error fetching stats:", error);
+       res.status(500).send({ message: "Internal Server Error" });
+     }
+   });
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // api for all the post
 
