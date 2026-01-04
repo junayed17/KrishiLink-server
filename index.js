@@ -74,7 +74,7 @@ async function run() {
       const result = await collection
         .find({})
         .sort({ _id: -1 })
-        .limit(6)
+        .limit(8)
         .toArray();
       res.send(result);
     });
@@ -280,6 +280,83 @@ app.patch("/interestStatus/:postId/:interestId", async (req, res) => {
 });
 
 
+
+
+
+
+// dashboard data finder api 
+
+app.get("/owner-stats", async (req, res) => {
+  const email = req.query.email;
+console.log(email);
+
+  // ১. Oi owner-er shob post khunje ber koro
+  const posts = await collection
+    .find({ "owner.ownerEmail": email })
+    .toArray();
+
+  // ২. Variables initialize koro
+  let totalInterests = 0;
+  let vegetable = 0;
+  let fruit = 0;
+  let grain = 0;
+  let others = 0;
+
+  // ৩. Loop chaliye shob calculate koro
+  posts.forEach((crop) => {
+    // Interest count koro (jodi interests array thake)
+    totalInterests += crop.interests ? crop.interests.length : 0;
+
+    // Type onujayi count koro
+    if (crop.type === "Vegetable") vegetable++;
+    else if (crop.type === "Fruit") fruit++;
+    else if (crop.type === "Grain") grain++;
+    else others++;
+  });
+
+  // ৪. Response pathao
+  res.send({
+    totalPosts: posts.length,
+    totalInterests,
+    vegetable,
+    fruit,
+    grain,
+    others,
+  });
+});
+
+
+
+
+// post vs interests api 
+
+app.get("/interest-stats/:email", async (req, res) => {
+  const email = req.params.email;
+
+  
+
+  // ১. Oi owner-er shob post khunje ber koro
+  const posts = await collection.find({ "owner.ownerEmail": email }).toArray();
+
+  // ২. Protita post theke name ebong total requested quantity ber koro
+  const result = posts.map((post) => {
+    // interest array theke quantity gulo jog koro
+    const totalRequested = post.interests
+      ? post.interests.reduce(
+          (sum, item) => sum + Number(item.quantity || 0),
+          0
+        )
+      : 0;
+
+    return {
+      name: post.name,
+      requested: totalRequested,
+      stock: Number(post.quantity),
+    };
+  });
+
+  res.send(result);
+});
 
 
 
